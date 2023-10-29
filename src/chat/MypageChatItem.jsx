@@ -4,13 +4,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane, faPeopleGroup } from "@fortawesome/free-solid-svg-icons";
 import { FaTrashAlt } from "react-icons/fa";
 
-const MypageChatItem = () => {
+const MypageChatItem = ({ idx, setShowChatList }) => {
   const deleteChat = () => {
     alert("채팅방을 나가시겠습니까?");
   };
 
   return (
-    <div className={styles.chat_room}>
+    <div className={styles.chat_room} onClick={() => setShowChatList(idx)}>
       <div className={styles.chat_room_title}>
         <div className={styles.chatting_room}>
           <FontAwesomeIcon className={styles.group_icon} icon={faPeopleGroup} />

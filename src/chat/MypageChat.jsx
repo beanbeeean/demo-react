@@ -5,6 +5,11 @@ import OthersChat from "./OthersChat";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane, faPeopleGroup } from "@fortawesome/free-solid-svg-icons";
 import MypageChatItem from "./MypageChatItem";
+import api from "../api";
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
+import ChatArea from "./ChatArea";
+import { Routes } from "react-router-dom";
 
 const data = [
   {
@@ -50,50 +55,92 @@ const data = [
 ];
 
 const MypageChat = () => {
-  const scrollRef = useRef();
-  const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+  const [showChatList, setShowChatList] = useState(0);
+  const [newName, setNewName] = useState("");
+  const [list, setList] = useState([]);
+  const [roomId, setRoomId] = useState("");
+  const [userMaxCount, setUserMaxCount] = useState(2);
+
+  let [userName, setUserName] = useState("");
+
+  const test = () => {
+    api
+      .post("http://127.0.0.1:8080/chat/createroom", {
+        newName: newName,
+        userMaxCount: userMaxCount,
+        userName: userName,
+      })
+      .then(function (response) {
+        console.log(response);
+        getList();
+      })
+      .catch(function (err) {
+        console.log(err);
+      });
   };
+
+  const getList = () => {
+    api
+      .get("http://127.0.0.1:8080/")
+      .then(function (res) {
+        setList(res.data.list);
+        console.log("list res", list);
+      })
+      .catch(function (err) {
+        console.log("list err", err);
+      });
+  };
+
   useEffect(() => {
-    // scrollToBottom();
+    console.log("show ", showChatList);
+  }, [showChatList]);
+
+  useEffect(() => {
+    getList();
   }, []);
 
   return (
     <div className={styles.mypage_chat}>
       <div className={styles.chat_box}>
         <div className={styles.chat_list}>
-          <MypageChatItem />
-          <MypageChatItem />
-          <MypageChatItem />
-        </div>
-
-        <div className={styles.chat_area}>
-          <div className={styles.chatting}>
-            <div ref={scrollRef} className={styles.chatting_log}>
-              <div className={styles.chat_date}>
-                <span>2023년 10월 20일</span>
+          {list.map((item) => (
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">
+                  <a onClick={() => setRoomId(item.roomId)}>{item.roomName}</a>
+                </div>
               </div>
-              {data.map((chat) =>
-                chat.user == 1 ? (
-                  <MyChat chat={chat} />
-                ) : (
-                  <OthersChat chat={chat} />
-                )
-              )}
-            </div>
-
-            <div className={styles.input_chat}>
-              <input type="text" placeholder="메세지를 입력하세요" />
-              <FontAwesomeIcon
-                title="Send"
-                className={styles.send_icon}
-                icon={faPaperPlane}
-              />
-            </div>
-          </div>
+              <span class="badge bg-primary rounded-pill">
+                {item.userCount}명
+              </span>
+            </li>
+          ))}
         </div>
+
+        {roomId !== "" ? (
+          <ChatArea roomId={roomId} setRoomId={setRoomId} userName={userName} />
+        ) : (
+          "없음"
+        )}
+      </div>
+      <div>
+        <input
+          type="text"
+          name="name"
+          class="form-control"
+          id="roomName"
+          onChange={(e) => setNewName(e.target.value)}
+        />
+        <button class="btn btn-secondary" id="create" onClick={test}>
+          개설하기
+        </button>
+        <br />
+        <input type="text" onChange={(e) => setUserName(e.target.value)} />
+        <br />
+        <input
+          type="number"
+          onChange={(e) => setUserMaxCount(e.target.value)}
+        />
       </div>
     </div>
   );
