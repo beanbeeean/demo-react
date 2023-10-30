@@ -10,6 +10,7 @@ import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import ChatArea from "./ChatArea";
 import { Routes } from "react-router-dom";
+import { param } from "jquery";
 
 const data = [
   {
@@ -81,7 +82,11 @@ const MypageChat = () => {
 
   const getList = () => {
     api
-      .get("http://127.0.0.1:8080/")
+      .get("http://127.0.0.1:8080/", {
+        params: {
+          userName: userName,
+        },
+      })
       .then(function (res) {
         setList(res.data.list);
         console.log("list res", list);
@@ -97,7 +102,7 @@ const MypageChat = () => {
 
   useEffect(() => {
     getList();
-  }, []);
+  }, [userName]);
 
   return (
     <div className={styles.mypage_chat}>
