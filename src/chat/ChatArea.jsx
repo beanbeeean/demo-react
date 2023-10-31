@@ -10,10 +10,13 @@ import api from "../api";
 
 let stompClient = null;
 
-const ChatArea = ({ roomId, setRoomId, userName }) => {
+const ChatArea = ({ roomId, setRoomId, userName, leave }) => {
   let [userList, setUserList] = useState([]);
   let [msg, setMsg] = useState([]);
   let [inputText, setInputText] = useState("");
+  let [lastMsg, setLastMsg] = useState([]);
+
+  const [currentUser, setCurrentUser] = useState("");
 
   function connect() {
     var socket = new SockJS("/ws-stomp");
@@ -42,16 +45,43 @@ const ChatArea = ({ roomId, setRoomId, userName }) => {
     //   // connectingElement.classList.add("hidden");
   }
 
+  function onDisConnected() {
+    // 서버에 userName 을 가진 유저가 들어왔다는 것을 알림
+    // /pub/chat/enterUser 로 메시지를 보냄
+    stompClient.send(
+      "/pub/chat/leaveUser",
+      {},
+      JSON.stringify({
+        roomId: roomId,
+        sender: userName,
+        type: "LEAVE",
+      })
+    );
+
+    disConnect();
+    //   console.log("[onConnected] stompClient : ", stompClient);
+    //   // connectingElement.classList.add("hidden");
+  }
+
   function onMessageReceived(payload) {
     //console.log("payload 들어오냐? :"+payload);
     let arr = [];
     var chat = JSON.parse(payload.body);
 
+    let test = chat.currentUser;
+
+    setCurrentUser(chat.currentUser);
+
     if (chat.type === "ENTER") {
-      // chatType 이 enter 라면 아래 내용
-      chat.content = chat.sender + chat.message;
-      msg.push(chat.content);
-      setMsg([...msg]);
+      if (test == userName) {
+        chat.content = chat.sender + chat.message;
+        lastMsg.push(chat.content);
+        arr = lastMsg.slice();
+        setLastMsg(arr);
+      }
+
+      // setEnteredUser({ userName: userName, entered: true });
+
       //   setMsg(chat.content);
       getUserList();
     } else if (chat.type === "LEAVE") {
@@ -106,6 +136,17 @@ const ChatArea = ({ roomId, setRoomId, userName }) => {
     }
   }
 
+  function disConnect() {
+    stompClient = null;
+    setRoomId("");
+  }
+
+  useEffect(() => {
+    if (leave) {
+      onDisConnected();
+    }
+  }, [leave]);
+
   useEffect(() => {
     connect();
   }, [roomId]);
@@ -118,6 +159,9 @@ const ChatArea = ({ roomId, setRoomId, userName }) => {
             <span>2023년 10월 20일</span>
           </div>
           <div>{roomId}</div>
+          {lastMsg.map((msg) => (
+            <MyChat msg={msg} />
+          ))}
           {msg.map((msg) => (
             <MyChat msg={msg} />
           ))}
@@ -139,7 +183,7 @@ const ChatArea = ({ roomId, setRoomId, userName }) => {
             icon={faPaperPlane}
             onClick={sendMessage}
           />
-          <button onClick={() => setRoomId("")}>돌아가기</button>
+          <button onClick={() => disConnect()}>돌아가기</button>
         </div>
       </div>
     </div>

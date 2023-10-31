@@ -12,57 +12,18 @@ import ChatArea from "./ChatArea";
 import { Routes } from "react-router-dom";
 import { param } from "jquery";
 
-const data = [
-  {
-    user: 1,
-    text: "hello",
-  },
-  {
-    user: 2,
-    text: "hi",
-  },
-  {
-    user: 1,
-    text: "hello",
-  },
-  {
-    user: 2,
-    text: "hi",
-  },
-  {
-    user: 1,
-    text: "hello",
-  },
-  {
-    user: 2,
-    text: "hi",
-  },
-  {
-    user: 1,
-    text: "hello",
-  },
-  {
-    user: 2,
-    text: "hi",
-  },
-  {
-    user: 1,
-    text: "hello",
-  },
-  {
-    user: 2,
-    text: "hi",
-  },
-];
-
 const MypageChat = () => {
   const [showChatList, setShowChatList] = useState(0);
   const [newName, setNewName] = useState("");
   const [list, setList] = useState([]);
   const [roomId, setRoomId] = useState("");
   const [userMaxCount, setUserMaxCount] = useState(2);
-
+  const [leave, setLeave] = useState();
   let [userName, setUserName] = useState("");
+
+  const leaveConfirm = () => {
+    setLeave(window.confirm("나갈래요?"));
+  };
 
   const test = () => {
     api
@@ -118,12 +79,18 @@ const MypageChat = () => {
               <span class="badge bg-primary rounded-pill">
                 {item.userCount}명
               </span>
+              <button onClick={leaveConfirm}>채팅방 나가기</button>
             </li>
           ))}
         </div>
 
         {roomId !== "" ? (
-          <ChatArea roomId={roomId} setRoomId={setRoomId} userName={userName} />
+          <ChatArea
+            roomId={roomId}
+            setRoomId={setRoomId}
+            userName={userName}
+            leave={leave}
+          />
         ) : (
           "없음"
         )}
